@@ -13,7 +13,7 @@ android {
 
     defaultConfig {
         applicationId = "dev.sahildesai.tmdbapp"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
@@ -22,6 +22,15 @@ android {
     }
 
     buildTypes {
+
+        debug {
+            buildConfigField("String", "BASE_URL", "\"https://api.themoviedb.org/3/\"")
+            buildConfigField(
+                "String",
+                "TOKEN",
+                "\"eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIxZWUzMTQ4ZDg4OTc2NmY3YTBjNThlZmRmMTQxZTA3ZSIsIm5iZiI6MTc0Mjg5Njc2NC41NDQ5OTk4LCJzdWIiOiI2N2UyN2U3YzRjNTI3NDY2NjVkYzg1ODciLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.-86ay-MjvIVhmYUEY4Gqz_r7Jpy8v2AEMnk3T_GT-5U\""
+            )
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
@@ -39,6 +48,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 

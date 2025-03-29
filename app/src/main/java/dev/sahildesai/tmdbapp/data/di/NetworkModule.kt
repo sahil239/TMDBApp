@@ -4,6 +4,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import dev.sahildesai.tmdbapp.BuildConfig
 import dev.sahildesai.tmdbapp.data.api.APIService
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
@@ -12,12 +13,11 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Singleton
 
-
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    private const val BASE_URL = "https://api.themoviedb.org/3/"
+    private const val BASE_URL = BuildConfig.BASE_URL
 
     @Singleton
     @Provides
@@ -33,7 +33,7 @@ object NetworkModule {
         val headerInterceptor = Interceptor { chain ->
             val originalRequest = chain.request()
             val requestWithHeaders = originalRequest.newBuilder()
-                .addHeader("Authorization", "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIxZWUzMTQ4ZDg4OTc2NmY3YTBjNThlZmRmMTQxZTA3ZSIsIm5iZiI6MTc0Mjg5Njc2NC41NDQ5OTk4LCJzdWIiOiI2N2UyN2U3YzRjNTI3NDY2NjVkYzg1ODciLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.-86ay-MjvIVhmYUEY4Gqz_r7Jpy8v2AEMnk3T_GT-5U")
+                .addHeader("Authorization", "Bearer ${BuildConfig.TOKEN}")
                 .addHeader("Accept", "application/json")
                 .build()
             chain.proceed(requestWithHeaders)

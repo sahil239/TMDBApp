@@ -31,15 +31,19 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.paging.LoadState
+import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.items
 import dev.sahildesai.tmdbapp.data.api.Movie
+import dev.sahildesai.tmdbapp.formatDate
 import dev.sahildesai.tmdbapp.ui.navigation.MovieDetails
 import dev.sahildesai.tmdbapp.ui.widgets.ErrorData
 import dev.sahildesai.tmdbapp.ui.widgets.LoadImageFromUrl
 import dev.sahildesai.tmdbapp.ui.widgets.LoadingData
 import dev.sahildesai.tmdbapp.ui.widgets.ShowError
 import kotlinx.coroutines.flow.collectLatest
+import java.text.DecimalFormat
+import java.time.LocalDate
 
 @Composable
 fun MovieListScreen(
@@ -64,106 +68,107 @@ fun MovieListScreen(
         )
         is MoviesState.Success -> {
             val lazyPagingItems = moviesState.movies.collectAsLazyPagingItems()
-
-                val lazyListState = rememberLazyListState() // Remember the scroll state
-
-                LaunchedEffect(lazyListState) {
-                    snapshotFlow {
-                        lazyListState.firstVisibleItemIndex
-                    }.collectLatest {  }
-
-                }
-                LazyColumn(modifier = Modifier.fillMaxSize(), state = lazyListState) {
-                    items(lazyPagingItems) { movie ->
-                        movie?.let { MovieRow(movie = movie) {
-                            navController.navigate(MovieDetails(movie.id))
-                        }
-                        }
-                    }
-                    // Handling LoadState (when loading more items)
-                    lazyPagingItems.apply {
-                        when {
-                            loadState.refresh is LoadState.Loading -> {
-                                item {
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .padding(16.dp),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        CircularProgressIndicator()
-                                    }
-                                }
-                            }
-
-                            loadState.append is LoadState.Loading -> {
-                                item {
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .padding(16.dp),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        CircularProgressIndicator()
-                                    }
-                                }
-                            }
-
-                            loadState.refresh is LoadState.Error ||  loadState.append is LoadState.Error -> {
-                                item {
-                                    val message = if(loadState.refresh is LoadState.Error){
-                                        val loadStateError = loadState.refresh as LoadState.Error
-                                        loadStateError.error.message
-                                    }else {
-                                        val loadStateError = loadState.append as LoadState.Error
-                                        loadStateError.error.message
-                                    } ?: "Unknown Error."
-                                    ShowError(
-                                        ErrorData(
-                                            message = message,
-                                            buttonText = "Retry",
-                                            action = viewModel::retryFetchMovies)
-                                    )
-                                }
-                            }
-                        }
-
-                        // Display loading indicator when appending data
-                        if (loadState.append is LoadState.NotLoading
-                            && !loadState.append.endOfPaginationReached
-                            && loadState.refresh !is LoadState.Loading
-                            && loadState.append !is LoadState.Error
-                            && loadState.refresh !is LoadState.Error
-                        ) {
-                            item {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .padding(16.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    CircularProgressIndicator()
-                                }
-                            }
-                        }
-
-                        if (loadState.append is LoadState.NotLoading && loadState.append.endOfPaginationReached) {
-                            item {
-                                Text(
-                                    text = "End of Data",
-                                    modifier = Modifier.padding(bottom = 24.dp).fillMaxWidth(),
-                                    textAlign = TextAlign.Center
-                                )
-                            }
-                        }
-                    }
-                }
-            }
+            ShowMovieList(lazyPagingItems ,navController::navigate ,viewModel::retryFetchMovies)
+        }
         }
     }
 
 }
 
+@Composable
+fun ShowMovieList(lazyPagingItems: LazyPagingItems<Movie>, onSimilarMovieClick: (MovieDetails) -> Unit, onRetryClicked: () -> Unit) {
+    val lazyListState = rememberLazyListState() // Remember the scroll state
+
+    LaunchedEffect(lazyListState) {
+        snapshotFlow {
+            lazyListState.firstVisibleItemIndex
+        }.collectLatest {  }
+
+    }
+    LazyColumn(modifier = Modifier.fillMaxSize(), state = lazyListState) {
+        items(lazyPagingItems) { movie ->
+            movie?.let { MovieRow(movie = movie) { onSimilarMovieClick(MovieDetails(movie.id)) } }
+        }
+        // Handling LoadState (when loading more items)
+        lazyPagingItems.apply {
+            when {
+                loadState.refresh is LoadState.Loading -> {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
+                    }
+                }
+
+                loadState.append is LoadState.Loading -> {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
+                    }
+                }
+
+                loadState.refresh is LoadState.Error ||  loadState.append is LoadState.Error -> {
+                    item {
+                        val message = if(loadState.refresh is LoadState.Error){
+                            val loadStateError = loadState.refresh as LoadState.Error
+                            loadStateError.error.message
+                        }else {
+                            val loadStateError = loadState.append as LoadState.Error
+                            loadStateError.error.message
+                        } ?: "Unknown Error."
+                        ShowError(
+                            ErrorData(
+                                message = message,
+                                buttonText = "Retry",
+                                action = onRetryClicked
+                            )
+                        )
+                    }
+                }
+            }
+
+            // Display loading indicator when appending data
+            if (loadState.append is LoadState.NotLoading
+                && !loadState.append.endOfPaginationReached
+                && loadState.refresh !is LoadState.Loading
+                && loadState.append !is LoadState.Error
+                && loadState.refresh !is LoadState.Error
+            ) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }
+            }
+
+            if (loadState.append is LoadState.NotLoading && loadState.append.endOfPaginationReached) {
+                item {
+                    Text(
+                        text = "End of Data",
+                        modifier = Modifier.padding(bottom = 24.dp).fillMaxWidth(),
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        }
+    }
+}
 
 @Composable
 fun MovieRow(movie: Movie, onClick : () -> Unit) {
@@ -203,9 +208,11 @@ fun MovieRow(movie: Movie, onClick : () -> Unit) {
                     overflow = TextOverflow.Ellipsis // To truncate long titles
                 )
 
+                val dec = DecimalFormat("#.#")
+                val date = if(movie.releaseDate.isBlank()) "N/A" else formatDate(LocalDate.parse(movie.releaseDate))
                 // Movie release year and rating
                 Text(
-                    text = "Release: ${movie.releaseDate} Rating: ${movie.voteAvg}", // Show release year
+                    text = "Release: $date Rating: ${ dec.format(movie.voteAvg)}", // Show release year
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.secondary
                 )
