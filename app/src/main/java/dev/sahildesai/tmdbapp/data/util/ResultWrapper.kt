@@ -1,5 +1,6 @@
 package dev.sahildesai.tmdbapp.data.util
 
+import android.util.Log
 import retrofit2.Response
 
 // A sealed class representing either a successful result or an error.

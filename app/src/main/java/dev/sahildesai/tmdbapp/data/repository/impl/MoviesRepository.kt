@@ -10,6 +10,7 @@ import dev.sahildesai.tmdbapp.data.api.Movie
 import dev.sahildesai.tmdbapp.data.repository.IMoviesRepository
 import dev.sahildesai.tmdbapp.data.util.ApiResult
 import dev.sahildesai.tmdbapp.data.util.parseAPICall
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
@@ -28,6 +29,7 @@ class MoviesRepository @Inject constructor(
     }
 
     override suspend fun getSimilarMovies(movieId: Long): ApiResult<GetMovieResponse> {
+        delay(5000L)
         return parseAPICall { apiService.getSimilarMovies(movieId) }
     }
 

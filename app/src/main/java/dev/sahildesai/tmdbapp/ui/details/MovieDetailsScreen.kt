@@ -62,7 +62,7 @@ fun MovieDetailsScreen(
 }
 
 @Composable
-fun ShowMovieDetails(movie: Movie, similarMovies: List<Movie>?, onSimilarMovieClicked: (MovieDetails)-> Unit, onBackPressed: ()->Unit){
+fun ShowMovieDetails(movie: Movie, similarMovies: List<Movie>, onSimilarMovieClicked: (MovieDetails)-> Unit, onBackPressed: ()->Unit){
     val connection = remember {
         object : NestedScrollConnection {
         }
@@ -108,9 +108,9 @@ fun ShowMovieDetails(movie: Movie, similarMovies: List<Movie>?, onSimilarMovieCl
 }
 
 @Composable
-fun SimilarMoviesGrid(similarMovies: List<Movie>?, onSimilarMovieClicked: (MovieDetails) -> Unit) {
+fun SimilarMoviesGrid(similarMovies: List<Movie>, onSimilarMovieClicked: (MovieDetails) -> Unit) {
     Column {
-        if(!similarMovies.isNullOrEmpty()) {
+        if(similarMovies.isNotEmpty()) {
             Text(
                 color = Color.White,
                 text = "More like this",
